@@ -2,10 +2,7 @@ const router = require("express").Router();
 const passport = require("passport");
 
 /*
-====================================
 Google Login
-GET /auth/google
-====================================
 */
 
 router.get(
@@ -16,10 +13,7 @@ router.get(
 );
 
 /*
-====================================
 Google Callback
-GET /auth/google/callback
-====================================
 */
 
 router.get(
@@ -36,10 +30,7 @@ router.get(
 );
 
 /*
-====================================
 Current User
-GET /auth/me
-====================================
 */
 
 router.get("/me", (req, res) => {
@@ -60,10 +51,7 @@ router.get("/me", (req, res) => {
 });
 
 /*
-====================================
 Logout
-GET /auth/logout
-====================================
 */
 
 router.get("/logout", (req, res) => {

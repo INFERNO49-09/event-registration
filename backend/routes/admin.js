@@ -9,11 +9,7 @@ const Registration =
   require("../models/Registration");
 
 /*
-====================================
 Dashboard Statistics
-GET /admin/stats
-Admin Only
-====================================
 */
 
 router.get(
@@ -53,11 +49,7 @@ router.get(
 );
 
 /*
-====================================
-Revenue Per Event
-GET /admin/revenue
-Admin Only
-====================================
+Revenue
 */
 
 router.get(
@@ -91,11 +83,7 @@ router.get(
 );
 
 /*
-====================================
 Registrations For Event
-GET /admin/event/:eventId
-Admin Only
-====================================
 */
 
 router.get(
@@ -126,14 +114,6 @@ router.get(
     }
   }
 );
-
-/*
-====================================
-CSV Export
-GET /admin/export/:eventId
-Admin Only
-====================================
-*/
 
 router.get(
   "/export/:eventId",
@@ -211,13 +191,8 @@ router.get(
 );
 
 /*
-====================================
-All Events With Analytics
-GET /admin/events
-Admin Only
-====================================
+event Analytics
 */
-
 router.get(
   "/events",
   adminMiddleware,

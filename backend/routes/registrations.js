@@ -7,11 +7,7 @@ const authMiddleware =
   require("../middleware/auth");
 
 /*
-====================================
 Register For Event
-POST /registrations
-Auth Required
-====================================
 */
 
 router.post(
@@ -107,11 +103,7 @@ router.post(
 );
 
 /*
-====================================
 Get Registrations For Event
-GET /registrations/event/:eventId
-Auth Required
-====================================
 */
 
 router.get(
@@ -143,11 +135,7 @@ router.get(
 );
 
 /*
-====================================
 Get Current User Registrations
-GET /registrations/user/:userId
-Auth Required
-====================================
 */
 
 router.get(
@@ -183,11 +171,7 @@ router.get(
 );
 
 /*
-====================================
 Cancel Registration
-DELETE /registrations/:id
-Auth Required
-====================================
 */
 
 router.delete(

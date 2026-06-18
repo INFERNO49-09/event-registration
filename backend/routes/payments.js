@@ -18,10 +18,7 @@ const razorpay = new Razorpay({
 });
 
 /*
-====================================
 Create Razorpay Order
-POST /payments/create-order
-====================================
 */
 
 router.post(
@@ -88,10 +85,7 @@ router.post(
 );
 
 /*
-====================================
 Verify Payment
-POST /payments/verify
-====================================
 */
 
 router.post(
@@ -205,10 +199,7 @@ router.post(
 );
 
 /*
-====================================
 Free Event Registration
-POST /payments/free-register
-====================================
 */
 
 router.post(

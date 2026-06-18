@@ -6,10 +6,7 @@ const adminMiddleware =
   require("../middleware/admin");
 
 /*
-====================================
 Get All Events
-GET /events
-====================================
 */
 
 router.get("/", async (req, res) => {
@@ -28,10 +25,7 @@ router.get("/", async (req, res) => {
 });
 
 /*
-====================================
 Get Single Event
-GET /events/:id
-====================================
 */
 
 router.get("/:id", async (req, res) => {
@@ -57,11 +51,7 @@ router.get("/:id", async (req, res) => {
 });
 
 /*
-====================================
 Create Event
-POST /events
-Admin Only
-====================================
 */
 
 router.post(
@@ -117,11 +107,7 @@ router.post(
 );
 
 /*
-====================================
 Update Event
-PUT /events/:id
-Admin Only
-====================================
 */
 
 router.put(
@@ -160,11 +146,7 @@ router.put(
 );
 
 /*
-====================================
 Delete Event
-DELETE /events/:id
-Admin Only
-====================================
 */
 
 router.delete(
