@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const passport = require("passport");
 
+const frontendUrl = () =>
+  (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+
 /*
 Google Login
 */
@@ -19,13 +22,10 @@ Google Callback
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/",
+    failureRedirect: `${frontendUrl()}/?login=failed`,
   }),
   (req, res) => {
-    res.redirect(
-      process.env.FRONTEND_URL ||
-        "http://localhost:5173/events"
-    );
+    res.redirect(`${frontendUrl()}/events`);
   }
 );
 
@@ -72,7 +72,7 @@ router.get("/logout", (req, res) => {
         });
       }
 
-      res.clearCookie("connect.sid");
+      res.clearCookie("eventhub.sid");
 
       return res.json({
         success: true,
