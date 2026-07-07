@@ -24,9 +24,10 @@ router.get("/", async (req, res) => {
 
     res.json(events);
   } catch (error) {
+    console.error("Event list failed:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to load events",
     });
   }
 });
@@ -57,9 +58,10 @@ router.get("/:id", async (req, res) => {
 
     res.json(event);
   } catch (error) {
+    console.error("Event lookup failed:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to load event",
     });
   }
 });
@@ -121,9 +123,10 @@ router.post(
         event,
       });
     } catch (error) {
+      console.error("Event creation failed:", error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: "Failed to create event",
       });
     }
   }
@@ -167,9 +170,10 @@ router.put(
         event,
       });
     } catch (error) {
+      console.error("Event update failed:", error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: "Failed to update event",
       });
     }
   }
@@ -209,9 +213,10 @@ router.delete(
           "Event deleted successfully",
       });
     } catch (error) {
+      console.error("Event deletion failed:", error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: "Failed to delete event",
       });
     }
   }

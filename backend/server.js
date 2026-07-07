@@ -3,6 +3,8 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const session = require("express-session");
 const passport = require("passport");
 const dns = require("dns");
@@ -102,6 +104,52 @@ app.use(
 
 app.set("trust proxy", 1);
 
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  })
+);
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message:
+        "Too many requests. Try again later.",
+    },
+  })
+);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many authentication attempts. Try again later.",
+  },
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "Too many payment requests. Try again later.",
+  },
+});
+
 app.use(express.json({ limit: "1mb" }));
 
 app.use(
@@ -135,7 +183,7 @@ Routes
 ====================================
 */
 
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter, authRoutes);
 
 app.use("/events", eventRoutes);
 
@@ -161,6 +209,7 @@ app.get("/", (req, res) => {
 });
 app.use(
   "/payments",
+  paymentLimiter,
   paymentRoutes
 );
 

@@ -20,6 +20,7 @@ export default function EventDetails() {
   const [college, setCollege] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     queueMicrotask(async () => {
@@ -43,9 +44,11 @@ export default function EventDetails() {
   const registerForEvent = async () => {
     try {
       setMessage("");
+      setRegistering(true);
 
       if (!phone || !college) {
         setMessage("Enter your phone number and college name to register.");
+        setRegistering(false);
         return;
       }
 
@@ -63,7 +66,11 @@ export default function EventDetails() {
         );
 
         if (res.data.success) {
-          setMessage("Registered. This event is now in My registrations.");
+          setMessage(
+            res.data.waitlisted
+              ? "This event is full. You have been added to the waitlist."
+              : "Registered. Your QR ticket is now in My registrations."
+          );
         }
 
         return;
@@ -73,11 +80,18 @@ export default function EventDetails() {
         apiUrl("/payments/create-order"),
         {
           eventId: id,
+          phone,
+          college,
         },
         {
           withCredentials: true,
         }
       );
+
+      if (orderRes.data.waitlisted) {
+        setMessage("This event is full. You have been added to the waitlist without payment.");
+        return;
+      }
 
       const order = orderRes.data.order;
 
@@ -110,7 +124,7 @@ export default function EventDetails() {
             );
 
             if (verifyRes.data.success) {
-              setMessage("Paid and registered. This event is now in My registrations.");
+              setMessage("Paid and registered. Your QR ticket is now in My registrations.");
             }
           } catch (error) {
             console.error(error);
@@ -125,6 +139,8 @@ export default function EventDetails() {
       console.error(error);
 
       setMessage(error?.response?.data?.message || "Registration failed. Try again.");
+    } finally {
+      setRegistering(false);
     }
   };
 
@@ -226,8 +242,16 @@ export default function EventDetails() {
             />
           </label>
 
-          <button onClick={registerForEvent} className="btn btn-primary full-width">
-            {Number(event.fee) > 0 ? `Pay ₹${event.fee} and register` : "Register free"}
+          <button
+            onClick={registerForEvent}
+            className="btn btn-primary full-width"
+            disabled={registering}
+          >
+            {registering
+              ? "Working..."
+              : Number(event.fee) > 0
+                ? `Pay ₹${event.fee} and register`
+                : "Register free"}
           </button>
 
           {message && <div className="message">{message}</div>}

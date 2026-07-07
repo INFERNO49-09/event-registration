@@ -19,6 +19,7 @@ export default function MyEvents() {
   const [user, setUser] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionMessage, setActionMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -60,6 +61,29 @@ export default function MyEvents() {
       navigate("/");
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const cancelRegistration = async (registrationId) => {
+    const confirmed = window.confirm(
+      "Cancel this registration? Paid registrations will request a Razorpay refund."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionMessage("");
+      const res = await axios.delete(apiUrl(`/registrations/${registrationId}`), {
+        withCredentials: true,
+        data: {
+          reason: "Cancelled by attendee",
+        },
+      });
+
+      setActionMessage(res.data.message || "Registration cancelled.");
+      await loadPage();
+    } catch (error) {
+      setActionMessage(error?.response?.data?.message || "Cancellation failed.");
     }
   };
 
@@ -136,9 +160,13 @@ export default function MyEvents() {
             </button>
           </div>
         ) : (
-          <section className="event-grid" aria-label="Registered events">
+          <section aria-label="Registered events">
+            {actionMessage && <div className="message mb-6">{actionMessage}</div>}
+            <div className="event-grid">
             {registrations.map((registration) => {
               const event = registration.eventId;
+              const isActive = registration.status !== "cancelled";
+              const isWaitlisted = registration.status === "waitlisted";
 
               return (
                 <article className="event-ticket-card" key={registration._id}>
@@ -159,8 +187,26 @@ export default function MyEvents() {
                     </div>
 
                     <div className="event-content">
-                      <p className="ticket-code">{registration.paymentStatus}</p>
+                      <p className="ticket-code">
+                        {registration.status || "registered"} / {registration.paymentStatus}
+                      </p>
                       <h3 className="card-title">{event?.title}</h3>
+
+                      {registration.ticketCode && isActive && !isWaitlisted && (
+                        <div className="qr-ticket">
+                          <img
+                            src={apiUrl(`/registrations/${registration._id}/qr`)}
+                            alt={`QR ticket for ${event?.title}`}
+                          />
+                          <strong>{registration.ticketCode}</strong>
+                        </div>
+                      )}
+
+                      {isWaitlisted && (
+                        <p className="message">
+                          Waitlist position {registration.waitlistPosition || "pending"}. No payment has been taken.
+                        </p>
+                      )}
 
                       <div className="meta-grid">
                         <div className="meta-box">
@@ -179,6 +225,14 @@ export default function MyEvents() {
                           <span className="meta-label">Paid</span>
                           <strong>₹{registration.amountPaid}</strong>
                         </div>
+                        <div className="meta-box">
+                          <span className="meta-label">Check-in</span>
+                          <strong>{registration.checkedIn ? "Done" : "Pending"}</strong>
+                        </div>
+                        <div className="meta-box">
+                          <span className="meta-label">Refund</span>
+                          <strong>{registration.refundStatus || "none"}</strong>
+                        </div>
                       </div>
 
                       {event?._id && (
@@ -186,11 +240,21 @@ export default function MyEvents() {
                           View event
                         </Link>
                       )}
+
+                      {isActive && !registration.checkedIn && (
+                        <button
+                          onClick={() => cancelRegistration(registration._id)}
+                          className="btn btn-danger full-width mt-3"
+                        >
+                          Cancel registration
+                        </button>
+                      )}
                     </div>
                   </div>
                 </article>
               );
             })}
+            </div>
           </section>
         )}
       </div>

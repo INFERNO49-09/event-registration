@@ -17,6 +17,10 @@ export default function Admin() {
   const [fee, setFee] = useState("");
   const [maxSeats, setMaxSeats] = useState("");
   const [poster, setPoster] = useState("");
+  const [ticketCode, setTicketCode] = useState("");
+  const [scanResult, setScanResult] = useState(null);
+  const [scanMessage, setScanMessage] = useState("");
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     loadDashboard();
@@ -93,6 +97,41 @@ export default function Admin() {
 
   const downloadCSV = (eventId) => {
     window.open(apiUrl(`/admin/export/${eventId}`), "_blank");
+  };
+
+  const scanTicket = async (event) => {
+    event.preventDefault();
+
+    if (!ticketCode.trim()) {
+      setScanMessage("Enter or scan a ticket code.");
+      return;
+    }
+
+    try {
+      setScanning(true);
+      setScanMessage("");
+      setScanResult(null);
+
+      const res = await axios.post(
+        apiUrl("/admin/scan"),
+        {
+          ticketCode,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setScanResult(res.data.registration);
+      setScanMessage(res.data.message);
+      setTicketCode("");
+      await loadDashboard();
+    } catch (error) {
+      setScanResult(error?.response?.data?.registration || null);
+      setScanMessage(error?.response?.data?.message || "Ticket scan failed.");
+    } finally {
+      setScanning(false);
+    }
   };
 
   const logout = async () => {
@@ -178,8 +217,65 @@ export default function Admin() {
               <p className="meta-label">Revenue</p>
               <div className="metric-value">₹{stats.totalRevenue}</div>
             </div>
+            <div className="metric-card">
+              <p className="meta-label">Checked in</p>
+              <div className="metric-value">{stats.checkedIn}</div>
+            </div>
+            <div className="metric-card">
+              <p className="meta-label">Waitlisted</p>
+              <div className="metric-value">{stats.waitlisted}</div>
+            </div>
+            <div className="metric-card">
+              <p className="meta-label">Cancelled</p>
+              <div className="metric-value">{stats.cancelled}</div>
+            </div>
           </section>
         )}
+
+        <section className="detail-card mb-8" aria-labelledby="scan-title">
+          <p className="ticket-code">Door scanner</p>
+          <h2 id="scan-title" className="section-title">Scan ticket</h2>
+          <p className="card-copy">
+            Use a QR scanner that types into this field, or enter the ticket code manually.
+          </p>
+
+          <form onSubmit={scanTicket} className="inline-actions">
+            <input
+              type="text"
+              value={ticketCode}
+              onChange={(event) => setTicketCode(event.target.value)}
+              className="input scan-input"
+              placeholder="EH-..."
+              autoComplete="off"
+            />
+            <button type="submit" className="btn btn-primary" disabled={scanning}>
+              {scanning ? "Scanning..." : "Check in"}
+            </button>
+          </form>
+
+          {scanMessage && <div className="message mt-4">{scanMessage}</div>}
+
+          {scanResult && (
+            <div className="meta-grid mt-6">
+              <div className="meta-box">
+                <span className="meta-label">Attendee</span>
+                <strong>{scanResult.userId?.name}</strong>
+              </div>
+              <div className="meta-box">
+                <span className="meta-label">Event</span>
+                <strong>{scanResult.eventId?.title}</strong>
+              </div>
+              <div className="meta-box">
+                <span className="meta-label">Status</span>
+                <strong>{scanResult.status}</strong>
+              </div>
+              <div className="meta-box">
+                <span className="meta-label">Checked in</span>
+                <strong>{scanResult.checkedIn ? "Yes" : "No"}</strong>
+              </div>
+            </div>
+          )}
+        </section>
 
         <section className="detail-card mb-8" aria-labelledby="create-title">
           <p className="ticket-code">New listing</p>
@@ -306,6 +402,14 @@ export default function Admin() {
                     <div className="meta-box">
                       <span className="meta-label">Capacity</span>
                       <strong>{event.maxSeats}</strong>
+                    </div>
+                    <div className="meta-box">
+                      <span className="meta-label">Waitlist</span>
+                      <strong>{event.waitlisted}</strong>
+                    </div>
+                    <div className="meta-box">
+                      <span className="meta-label">Attendance</span>
+                      <strong>{event.checkedIn}</strong>
                     </div>
                   </div>
 

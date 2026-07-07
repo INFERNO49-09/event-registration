@@ -9,6 +9,10 @@ const authMiddleware =
 const Event = require("../models/Event");
 const Registration =
   require("../models/Registration");
+const { createTicketCode } = require("../utils/tickets");
+const {
+  sendRegistrationEmail,
+} = require("../utils/mailer");
 
 const razorpayKeyId =
   process.env.RAZORPAY_KEY_ID?.trim();
@@ -60,6 +64,37 @@ const releaseSeat = async (eventId) =>
     },
   });
 
+async function getNextWaitlistPosition(eventId) {
+  const lastWaitlist = await Registration.findOne({
+    eventId,
+    status: "waitlisted",
+  }).sort({ waitlistPosition: -1 });
+
+  return (lastWaitlist?.waitlistPosition || 0) + 1;
+}
+
+async function createWaitlistRegistration({ user, event, phone, college }) {
+  const registration = await Registration.create({
+    userId: user._id,
+    eventId: event._id,
+    phone,
+    college,
+    status: "waitlisted",
+    paymentStatus: "pending",
+    amountPaid: 0,
+    ticketCode: createTicketCode(),
+    waitlistPosition: await getNextWaitlistPosition(event._id),
+  });
+
+  await sendRegistrationEmail({
+    user,
+    event,
+    registration,
+  });
+
+  return registration;
+}
+
 /*
 Create Razorpay Order
 */
@@ -71,6 +106,10 @@ router.post(
     try {
       const { eventId } =
         req.body;
+      const normalizedPhone =
+        normalizeRequiredText(req.body.phone);
+      const normalizedCollege =
+        normalizeRequiredText(req.body.college);
 
       if (!isValidObjectId(eventId)) {
         return res.status(400).json({
@@ -110,10 +149,31 @@ router.post(
         event.registrations >=
         event.maxSeats
       ) {
-        return res.status(409).json({
-          success: false,
+        if (
+          !normalizedPhone ||
+          !normalizedCollege
+        ) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "Event is fully booked. Phone and college are required to join the waitlist.",
+          });
+        }
+
+        const registration =
+          await createWaitlistRegistration({
+            user: req.user,
+            event,
+            phone: normalizedPhone,
+            college: normalizedCollege,
+          });
+
+        return res.status(201).json({
+          success: true,
+          waitlisted: true,
           message:
-            "Event is fully booked",
+            "Event is full. You have been added to the waitlist.",
+          registration,
         });
       }
 
@@ -316,6 +376,8 @@ router.post(
               razorpay_payment_id,
             orderId:
               razorpay_order_id,
+            ticketCode:
+              createTicketCode(),
           });
       } catch (error) {
         await releaseSeat(eventId);
@@ -325,6 +387,17 @@ router.post(
       res.json({
         success: true,
         registration,
+      });
+
+      sendRegistrationEmail({
+        user: req.user,
+        event,
+        registration,
+      }).catch((error) => {
+        console.error(
+          "Registration confirmation email failed:",
+          error
+        );
       });
     } catch (error) {
       if (error.code === 11000) {
@@ -416,6 +489,27 @@ router.post(
         });
       }
 
+      if (
+        event.registrations >=
+        event.maxSeats
+      ) {
+        const registration =
+          await createWaitlistRegistration({
+            user: req.user,
+            event,
+            phone: normalizedPhone,
+            college: normalizedCollege,
+          });
+
+        return res.status(201).json({
+          success: true,
+          waitlisted: true,
+          message:
+            "Event is full. You have been added to the waitlist.",
+          registration,
+        });
+      }
+
       const reservedEvent =
         await reserveSeat(event);
 
@@ -439,6 +533,8 @@ router.post(
             paymentStatus:
               "paid",
             amountPaid: 0,
+            ticketCode:
+              createTicketCode(),
           });
       } catch (error) {
         await releaseSeat(eventId);
@@ -448,6 +544,17 @@ router.post(
       res.json({
         success: true,
         registration,
+      });
+
+      sendRegistrationEmail({
+        user: req.user,
+        event,
+        registration,
+      }).catch((error) => {
+        console.error(
+          "Registration confirmation email failed:",
+          error
+        );
       });
     } catch (error) {
       if (error.code === 11000) {
