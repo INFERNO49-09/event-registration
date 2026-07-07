@@ -1,10 +1,17 @@
 const router = require("express").Router();
+const mongoose = require("mongoose");
 
 const Registration = require("../models/Registration");
 const Event = require("../models/Event");
 
 const authMiddleware =
   require("../middleware/auth");
+
+const isValidObjectId = (id) =>
+  mongoose.Types.ObjectId.isValid(id);
+
+const cleanText = (value) =>
+  typeof value === "string" ? value.trim() : "";
 
 /*
 Register For Event
@@ -24,9 +31,9 @@ router.post(
       } = req.body;
 
       if (
-        !eventId ||
-        !phone ||
-        !college
+        !isValidObjectId(eventId) ||
+        !cleanText(phone) ||
+        !cleanText(college)
       ) {
         return res.status(400).json({
           success: false,
@@ -74,8 +81,8 @@ router.post(
         await Registration.create({
           userId,
           eventId,
-          phone,
-          college,
+          phone: cleanText(phone),
+          college: cleanText(college),
           paymentStatus: "pending",
           amountPaid: 0,
         });
@@ -94,9 +101,17 @@ router.post(
         registration,
       });
     } catch (error) {
+      if (error.code === 11000) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Already registered for this event",
+        });
+      }
+
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: "Registration failed",
       });
     }
   }
@@ -111,6 +126,13 @@ router.get(
   authMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.eventId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid event ID",
+        });
+      }
+
       const registrations =
         await Registration.find({
           eventId: req.params.eventId,
@@ -143,6 +165,13 @@ router.get(
   authMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID",
+        });
+      }
+
       // Users can only view their own registrations
       if (
         req.user._id.toString() !==
@@ -179,6 +208,13 @@ router.delete(
   authMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid registration ID",
+        });
+      }
+
       const registration =
         await Registration.findById(
           req.params.id
@@ -206,13 +242,12 @@ router.delete(
         });
       }
 
-      await Event.findByIdAndUpdate(
-        registration.eventId,
+      await Event.findOneAndUpdate(
         {
-          $inc: {
-            registrations: -1,
-          },
-        }
+          _id: registration.eventId,
+          registrations: { $gt: 0 },
+        },
+        { $inc: { registrations: -1 } }
       );
 
       await Registration.findByIdAndDelete(

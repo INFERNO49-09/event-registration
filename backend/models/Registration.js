@@ -22,11 +22,13 @@ const RegistrationSchema =
       phone: {
         type: String,
         required: true,
+        trim: true,
       },
 
       college: {
         type: String,
         required: true,
+        trim: true,
       },
 
       paymentStatus: {
@@ -41,22 +43,30 @@ const RegistrationSchema =
       amountPaid: {
         type: Number,
         default: 0,
+        min: 0,
       },
 
       paymentId: {
         type: String,
         default: "",
+        trim: true,
       },
 
       orderId: {
         type: String,
         default: "",
+        trim: true,
       },
     },
     {
       timestamps: true,
     }
   );
+
+RegistrationSchema.index(
+  { userId: 1, eventId: 1 },
+  { unique: true }
+);
 
 module.exports =
   mongoose.model(

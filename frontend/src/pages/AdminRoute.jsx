@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Navigate } from "react-router-dom";
+import { apiUrl } from "../api";
 
 export default function AdminRoute({
   children,
@@ -13,14 +14,14 @@ export default function AdminRoute({
     const checkAdmin = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/auth/me",
+          apiUrl("/auth/me"),
           {
             withCredentials: true,
           }
         );
 
         setUser(res.data);
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);

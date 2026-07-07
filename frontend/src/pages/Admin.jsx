@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../api";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -9,44 +10,27 @@ export default function Admin() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [title, setTitle] =
-    useState("");
-  const [description,
-    setDescription] =
-    useState("");
-  const [venue, setVenue] =
-    useState("");
-  const [date, setDate] =
-    useState("");
-  const [fee, setFee] =
-    useState("");
-  const [maxSeats,
-    setMaxSeats] =
-    useState("");
-  const [poster, setPoster] =
-    useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [venue, setVenue] = useState("");
+  const [date, setDate] = useState("");
+  const [fee, setFee] = useState("");
+  const [maxSeats, setMaxSeats] = useState("");
+  const [poster, setPoster] = useState("");
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
-  const loadDashboard = async () => {
+  async function loadDashboard() {
     try {
-      const statsRes =
-        await axios.get(
-          "http://localhost:5000/admin/stats",
-          {
-            withCredentials: true,
-          }
-        );
+      const statsRes = await axios.get(apiUrl("/admin/stats"), {
+        withCredentials: true,
+      });
 
-      const eventsRes =
-        await axios.get(
-          "http://localhost:5000/admin/events",
-          {
-            withCredentials: true,
-          }
-        );
+      const eventsRes = await axios.get(apiUrl("/admin/events"), {
+        withCredentials: true,
+      });
 
       setStats(statsRes.data);
       setEvents(eventsRes.data);
@@ -55,382 +39,290 @@ export default function Admin() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const createEvent =
-    async () => {
-      try {
-        await axios.post(
-          "http://localhost:5000/events",
-          {
-            title,
-            description,
-            venue,
-            date,
-            fee: Number(fee),
-            maxSeats:
-              Number(maxSeats),
-            poster,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-
-        setTitle("");
-        setDescription("");
-        setVenue("");
-        setDate("");
-        setFee("");
-        setMaxSeats("");
-        setPoster("");
-
-        await loadDashboard();
-
-        alert(
-          "Event created successfully"
-        );
-      } catch (error) {
-        alert(
-          error?.response?.data
-            ?.message ||
-            "Failed to create event"
-        );
-      }
-    };
-
-  const deleteEvent =
-    async (id) => {
-      const confirmDelete =
-        window.confirm(
-          "Delete this event?"
-        );
-
-      if (!confirmDelete)
-        return;
-
-      try {
-        await axios.delete(
-          `http://localhost:5000/events/${id}`,
-          {
-            withCredentials: true,
-          }
-        );
-
-        await loadDashboard();
-      } catch (error) {
-        alert(
-          "Delete failed"
-        );
-      }
-    };
-
-  const downloadCSV =
-    (eventId) => {
-      window.open(
-        `http://localhost:5000/admin/export/${eventId}`,
-        "_blank"
-      );
-    };
-
-  const logout =
-    async () => {
-      await axios.get(
-        "http://localhost:5000/auth/logout",
+  const createEvent = async () => {
+    try {
+      await axios.post(
+        apiUrl("/events"),
+        {
+          title,
+          description,
+          venue,
+          date,
+          fee: Number(fee),
+          maxSeats: Number(maxSeats),
+          poster,
+        },
         {
           withCredentials: true,
         }
       );
 
-      navigate("/");
-    };
+      setTitle("");
+      setDescription("");
+      setVenue("");
+      setDate("");
+      setFee("");
+      setMaxSeats("");
+      setPoster("");
+
+      await loadDashboard();
+
+      alert("Event created successfully");
+    } catch (error) {
+      alert(error?.response?.data?.message || "Failed to create event");
+    }
+  };
+
+  const deleteEvent = async (id) => {
+    const confirmDelete = window.confirm("Delete this event?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(apiUrl(`/events/${id}`), {
+        withCredentials: true,
+      });
+
+      await loadDashboard();
+    } catch {
+      alert("Delete failed");
+    }
+  };
+
+  const downloadCSV = (eventId) => {
+    window.open(apiUrl(`/admin/export/${eventId}`), "_blank");
+  };
+
+  const logout = async () => {
+    await axios.get(apiUrl("/auth/logout"), {
+      withCredentials: true,
+    });
+
+    navigate("/");
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        Loading...
+      <div className="center-stage">
+        <p className="eyebrow">Opening the organizer desk...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
+    <main className="app-shell">
+      <div className="page-wrap">
+        <nav className="dispatch-nav" aria-label="Admin navigation">
+          <div className="brand-lockup">
+            <div className="brand-mark">AD</div>
+            <div>
+              <p className="brand-title">Admin desk</p>
+              <p className="brand-subtitle">Publish, measure, export</p>
+            </div>
+          </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="nav-actions">
+            <button onClick={() => navigate("/events")} className="btn btn-primary">
+              Event board
+            </button>
+            <button onClick={logout} className="btn btn-danger">
+              Log out
+            </button>
+          </div>
+        </nav>
+
+        <section className="hero-grid" aria-labelledby="admin-title">
           <div>
-            <h1 className="text-4xl font-bold">
-              Admin Dashboard
+            <p className="eyebrow">Organizer operations</p>
+            <h1 id="admin-title" className="display-title">
+              Keep every room accountable.
             </h1>
-
-            <p className="text-slate-400">
-              Manage events,
-              registrations &
-              revenue
+            <p className="body-copy">
+              Publish the next listing, watch claimed seats and revenue, then
+              export the door list when check-in starts.
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() =>
-                navigate(
-                  "/events"
-                )
-              }
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700"
-            >
-              Events
-            </button>
+          <aside className="hero-ticket" aria-label="Admin summary ticket">
+            <div className="ticket-punches" />
+            <div className="hero-ticket-content">
+              <p className="ticket-code">Desk summary</p>
+              <div className="ticket-main">{events.length} listings under watch.</div>
+              <div className="ticket-row">
+                <div>
+                  <span className="meta-label">Mode</span>
+                  <strong>Admin</strong>
+                </div>
+                <div>
+                  <span className="meta-label">Export</span>
+                  <strong>CSV</strong>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
 
-            <button
-              onClick={logout}
-              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
+        {stats && (
+          <section className="metric-grid" aria-label="Platform statistics">
+            <div className="metric-card">
+              <p className="meta-label">Total events</p>
+              <div className="metric-value">{stats.totalEvents}</div>
+            </div>
+            <div className="metric-card">
+              <p className="meta-label">Registrations</p>
+              <div className="metric-value">{stats.totalRegistrations}</div>
+            </div>
+            <div className="metric-card">
+              <p className="meta-label">Revenue</p>
+              <div className="metric-value">₹{stats.totalRevenue}</div>
+            </div>
+          </section>
+        )}
 
-      {/* Stats */}
+        <section className="detail-card mb-8" aria-labelledby="create-title">
+          <p className="ticket-code">New listing</p>
+          <h2 id="create-title" className="section-title">Create event</h2>
 
-      {stats && (
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-            <p className="text-slate-400">
-              Total Events
-            </p>
+          <div className="admin-form-grid mt-8">
+            <label className="field">
+              <span className="field-label">Title</span>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="input"
+                placeholder="Hack night: payments edition"
+              />
+            </label>
 
-            <h2 className="text-5xl font-bold mt-2">
-              {
-                stats.totalEvents
-              }
-            </h2>
-          </div>
+            <label className="field">
+              <span className="field-label">Venue</span>
+              <input
+                type="text"
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                className="input"
+                placeholder="Auditorium B"
+              />
+            </label>
 
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-            <p className="text-slate-400">
-              Registrations
-            </p>
+            <label className="field">
+              <span className="field-label">Date</span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="input"
+              />
+            </label>
 
-            <h2 className="text-5xl font-bold mt-2">
-              {
-                stats.totalRegistrations
-              }
-            </h2>
-          </div>
+            <label className="field">
+              <span className="field-label">Fee</span>
+              <input
+                type="number"
+                value={fee}
+                onChange={(e) => setFee(e.target.value)}
+                className="input"
+                placeholder="0"
+              />
+            </label>
 
-          <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-            <p className="text-slate-400">
-              Revenue
-            </p>
+            <label className="field">
+              <span className="field-label">Maximum seats</span>
+              <input
+                type="number"
+                value={maxSeats}
+                onChange={(e) => setMaxSeats(e.target.value)}
+                className="input"
+                placeholder="120"
+              />
+            </label>
 
-            <h2 className="text-5xl font-bold mt-2">
-              ₹
-              {
-                stats.totalRevenue
-              }
-            </h2>
-          </div>
-        </div>
-      )}
-
-      {/* Create Event */}
-
-      <div className="max-w-7xl mx-auto px-6 mb-10">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-          <h2 className="text-3xl font-bold mb-6">
-            Create Event
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) =>
-                setTitle(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
-
-            <input
-              type="text"
-              placeholder="Venue"
-              value={venue}
-              onChange={(e) =>
-                setVenue(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
-
-            <input
-              type="date"
-              value={date}
-              onChange={(e) =>
-                setDate(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
-
-            <input
-              type="number"
-              placeholder="Fee"
-              value={fee}
-              onChange={(e) =>
-                setFee(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
-
-            <input
-              type="number"
-              placeholder="Maximum Seats"
-              value={maxSeats}
-              onChange={(e) =>
-                setMaxSeats(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
-
-            <input
-              type="text"
-              placeholder="Poster URL"
-              value={poster}
-              onChange={(e) =>
-                setPoster(
-                  e.target.value
-                )
-              }
-              className="p-3 rounded-xl bg-slate-900 border border-slate-700"
-            />
+            <label className="field">
+              <span className="field-label">Poster URL</span>
+              <input
+                type="text"
+                value={poster}
+                onChange={(e) => setPoster(e.target.value)}
+                className="input"
+                placeholder="https://..."
+              />
+            </label>
           </div>
 
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) =>
-              setDescription(
-                e.target.value
-              )
-            }
-            className="w-full mt-4 p-3 rounded-xl bg-slate-900 border border-slate-700 min-h-[120px]"
-          />
+          <label className="field">
+            <span className="field-label">Description</span>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="textarea"
+              placeholder="What will attendees do, learn, or bring?"
+            />
+          </label>
 
-          <button
-            onClick={
-              createEvent
-            }
-            className="mt-6 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-semibold"
-          >
-            Create Event
+          <button onClick={createEvent} className="btn btn-primary">
+            Create event
           </button>
-        </div>
-      </div>
+        </section>
 
-      {/* Events */}
+        <section aria-labelledby="analytics-title">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">Door list control</p>
+              <h2 id="analytics-title" className="section-title">Event analytics</h2>
+            </div>
+          </div>
 
-      <div className="max-w-7xl mx-auto px-6 pb-12">
-        <h2 className="text-3xl font-bold mb-6">
-          Event Analytics
-        </h2>
+          <div className="analytics-grid">
+            {events.map((event) => (
+              <article className="analytics-card" key={event._id}>
+                <div className="poster-frame">
+                  {event.poster ? (
+                    <img src={event.poster} alt={event.title} />
+                  ) : (
+                    <div className="poster-fallback">{event.title}</div>
+                  )}
+                </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {events.map(
-            (event) => (
-              <div
-                key={
-                  event._id
-                }
-                className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden"
-              >
-                {event.poster ? (
-                  <img
-                    src={
-                      event.poster
-                    }
-                    alt={
-                      event.title
-                    }
-                    className="w-full h-52 object-cover"
-                  />
-                ) : (
-                  <div className="h-52 bg-gradient-to-r from-blue-600 to-purple-700" />
-                )}
+                <div className="event-content">
+                  <p className="ticket-code">Organizer record</p>
+                  <h3 className="card-title">{event.title}</h3>
 
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-3">
-                    {
-                      event.title
-                    }
-                  </h3>
-
-                  <div className="space-y-2 text-slate-300">
-                    <p>
-                      👥{" "}
-                      {
-                        event.registrations
-                      }{" "}
-                      registrations
-                    </p>
-
-                    <p>
-                      💰 Fee:
-                      ₹
-                      {
-                        event.fee
-                      }
-                    </p>
-
-                    <p>
-                      📈 Revenue:
-                      ₹
-                      {
-                        event.revenue
-                      }
-                    </p>
+                  <div className="meta-grid">
+                    <div className="meta-box">
+                      <span className="meta-label">Registrations</span>
+                      <strong>{event.registrations}</strong>
+                    </div>
+                    <div className="meta-box">
+                      <span className="meta-label">Fee</span>
+                      <strong>₹{event.fee}</strong>
+                    </div>
+                    <div className="meta-box">
+                      <span className="meta-label">Revenue</span>
+                      <strong>₹{event.revenue}</strong>
+                    </div>
+                    <div className="meta-box">
+                      <span className="meta-label">Capacity</span>
+                      <strong>{event.maxSeats}</strong>
+                    </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() =>
-                        downloadCSV(
-                          event._id
-                        )
-                      }
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-xl"
-                    >
+                  <div className="inline-actions">
+                    <button onClick={() => downloadCSV(event._id)} className="btn btn-primary">
                       Export CSV
                     </button>
-
-                    <button
-                      onClick={() =>
-                        deleteEvent(
-                          event._id
-                        )
-                      }
-                      className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl"
-                    >
+                    <button onClick={() => deleteEvent(event._id)} className="btn btn-danger">
                       Delete
                     </button>
                   </div>
                 </div>
-              </div>
-            )
-          )}
-        </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

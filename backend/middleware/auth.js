@@ -9,9 +9,11 @@ module.exports = (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error("Auth middleware failed:", error);
+
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Authentication check failed",
     });
   }
 };

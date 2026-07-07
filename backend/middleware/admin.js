@@ -18,9 +18,11 @@ module.exports = (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error("Admin middleware failed:", error);
+
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Admin authorization check failed",
     });
   }
 };

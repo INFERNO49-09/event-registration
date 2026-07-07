@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const mongoose = require("mongoose");
 const { Parser } = require("json2csv");
 
 const adminMiddleware =
@@ -7,6 +8,9 @@ const adminMiddleware =
 const Event = require("../models/Event");
 const Registration =
   require("../models/Registration");
+
+const isValidObjectId = (id) =>
+  mongoose.Types.ObjectId.isValid(id);
 
 /*
 Dashboard Statistics
@@ -91,6 +95,13 @@ router.get(
   adminMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.eventId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid event ID",
+        });
+      }
+
       const registrations =
         await Registration.find({
           eventId:
@@ -120,6 +131,13 @@ router.get(
   adminMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.eventId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid event ID",
+        });
+      }
+
       const registrations =
         await Registration.find({
           eventId:

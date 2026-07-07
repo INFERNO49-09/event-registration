@@ -1,9 +1,16 @@
 const router = require("express").Router();
+const mongoose = require("mongoose");
 
 const Event = require("../models/Event");
 
 const adminMiddleware =
   require("../middleware/admin");
+
+const isValidObjectId = (id) =>
+  mongoose.Types.ObjectId.isValid(id);
+
+const cleanText = (value) =>
+  typeof value === "string" ? value.trim() : "";
 
 /*
 Get All Events
@@ -30,6 +37,13 @@ Get Single Event
 
 router.get("/:id", async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
     const event = await Event.findById(
       req.params.id
     );
@@ -69,28 +83,37 @@ router.post(
         poster,
       } = req.body;
 
+      const eventDate = new Date(date);
+      const eventFee = Number(fee || 0);
+      const eventMaxSeats =
+        Number(maxSeats);
+
       if (
-        !title ||
-        !description ||
-        !venue ||
-        !date ||
-        !maxSeats
+        !cleanText(title) ||
+        !cleanText(description) ||
+        !cleanText(venue) ||
+        Number.isNaN(eventDate.getTime()) ||
+        !Number.isInteger(eventMaxSeats) ||
+        eventMaxSeats < 1 ||
+        Number.isNaN(eventFee) ||
+        eventFee < 0
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Please fill all required fields",
+            "Provide title, description, venue, valid date, non-negative fee, and at least one seat",
         });
       }
 
       const event = await Event.create({
-        title,
-        description,
-        venue,
-        date,
-        fee: fee || 0,
-        maxSeats,
-        poster: poster || "",
+        title: cleanText(title),
+        description:
+          cleanText(description),
+        venue: cleanText(venue),
+        date: eventDate,
+        fee: eventFee,
+        maxSeats: eventMaxSeats,
+        poster: cleanText(poster),
       });
 
       res.status(201).json({
@@ -115,6 +138,13 @@ router.put(
   adminMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid event ID",
+        });
+      }
+
       const event =
         await Event.findByIdAndUpdate(
           req.params.id,
@@ -154,6 +184,13 @@ router.delete(
   adminMiddleware,
   async (req, res) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid event ID",
+        });
+      }
+
       const event =
         await Event.findByIdAndDelete(
           req.params.id

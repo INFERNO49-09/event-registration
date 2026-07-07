@@ -1,24 +1,17 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Navigate } from "react-router-dom";
+import { apiUrl } from "../api";
 
 export default function Login() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkLogin();
-  }, []);
-
-  const checkLogin = async () => {
+  async function checkLogin() {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/auth/me",
-        {
-          withCredentials: true,
-        }
-      );
+      const res = await axios.get(apiUrl("/auth/me"), {
+        withCredentials: true,
+      });
 
       setUser(res.data);
     } catch (error) {
@@ -27,75 +20,62 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    queueMicrotask(checkLogin);
+  }, []);
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      "http://localhost:5000/auth/google";
+    window.location.href = apiUrl("/auth/google");
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        <h1 className="text-3xl animate-pulse">
-          Loading...
-        </h1>
+      <div className="center-stage">
+        <p className="eyebrow">Checking entry pass...</p>
       </div>
     );
   }
 
   if (user) {
-    return (
-      <Navigate
-        to="/events"
-        replace
-      />
-    );
+    return <Navigate to="/events" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
-      {/* Background Glow */}
-      <div className="absolute w-96 h-96 bg-blue-600/20 rounded-full blur-3xl top-20 left-10" />
-      <div className="absolute w-96 h-96 bg-purple-600/20 rounded-full blur-3xl bottom-20 right-10" />
-
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold mb-3">
-              EventHub
-            </h1>
-
-            <p className="text-slate-400 mb-8">
-              Discover and register
-              for amazing events.
-            </p>
+    <main className="center-stage">
+      <section className="login-card">
+        <div className="panel login-copy">
+          <div className="brand-lockup">
+            <div className="brand-mark">EH</div>
+            <div>
+              <p className="brand-title">EventHub</p>
+              <p className="brand-subtitle">Campus dispatch</p>
+            </div>
           </div>
 
-          <button
-            onClick={
-              handleGoogleLogin
-            }
-            className="
-              w-full
-              bg-white
-              text-black
-              py-4
-              rounded-2xl
-              font-semibold
-              hover:scale-[1.02]
-              transition
-              flex
-              items-center
-              justify-center
-              gap-3
-            "
-          >
+          <h1 className="display-title mt-10">
+            Turn open seats into full rooms.
+          </h1>
+
+          <p className="body-copy">
+            Browse workshops, hackathons, seminars, and competitions from one
+            event desk. Sign in once, pick a seat, and keep every registration
+            in reach.
+          </p>
+        </div>
+
+        <div className="login-action">
+          <p className="ticket-code">Admit one organizer-approved profile</p>
+          <h2 className="ticket-main">Use your Google pass to enter.</h2>
+
+          <button onClick={handleGoogleLogin} className="btn btn-primary full-width">
             <svg
+              className="google-icon"
               width="20"
               height="20"
               viewBox="0 0 48 48"
+              aria-hidden="true"
             >
               <path
                 fill="#FFC107"
@@ -114,23 +94,15 @@ export default function Login() {
                 d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.2 5.3-6 6.8l6.2 5.2C39.8 36.1 44 30.7 44 24c0-1.3-.1-2.7-.4-3.5z"
               />
             </svg>
-
             Continue with Google
           </button>
 
-          <div className="mt-8 text-center text-slate-500 text-sm">
-            Secure login powered by
-            Google OAuth
-          </div>
+          <p className="muted">
+            Google OAuth protects the door. EventHub stores the registration
+            details organizers need at check-in.
+          </p>
         </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6 text-slate-500 text-sm">
-          Built for workshops,
-          hackathons, seminars &
-          events.
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
