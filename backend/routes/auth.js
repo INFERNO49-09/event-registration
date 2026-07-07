@@ -2,7 +2,7 @@ const router = require("express").Router();
 const passport = require("passport");
 
 const frontendUrl = () =>
-  (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+  (process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
 
 /*
 Google Login
@@ -21,11 +21,29 @@ Google Callback
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${frontendUrl()}/?login=failed`,
-  }),
   (req, res) => {
-    res.redirect(`${frontendUrl()}/events`);
+    passport.authenticate("google", (error, user) => {
+      if (error || !user) {
+        console.error("Google OAuth callback failed:", error);
+        return res.redirect(`${frontendUrl()}/?login=failed`);
+      }
+
+      req.logIn(user, (loginError) => {
+        if (loginError) {
+          console.error("Google OAuth login failed:", loginError);
+          return res.redirect(`${frontendUrl()}/?login=failed`);
+        }
+
+        req.session.save((sessionError) => {
+          if (sessionError) {
+            console.error("Session save failed after Google OAuth:", sessionError);
+            return res.redirect(`${frontendUrl()}/?login=failed`);
+          }
+
+          return res.redirect(`${frontendUrl()}/events`);
+        });
+      });
+    })(req, res);
   }
 );
 
@@ -72,6 +90,7 @@ router.get("/logout", (req, res) => {
         });
       }
 
+      res.clearCookie("connect.sid");
       res.clearCookie("eventhub.sid");
 
       return res.json({

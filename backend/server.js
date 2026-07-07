@@ -6,6 +6,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const dns = require("dns");
 
@@ -32,7 +33,6 @@ function validateEnv() {
     "GOOGLE_CLIENT_SECRET",
     "RAZORPAY_KEY_ID",
     "RAZORPAY_KEY_SECRET",
-    "FRONTEND_URL",
   ];
 
   const missingEnv = requiredEnv.filter(
@@ -42,6 +42,16 @@ function validateEnv() {
   if (missingEnv.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missingEnv.join(", ")}`
+    );
+  }
+
+  if (
+    isProduction &&
+    !process.env.CLIENT_URL?.trim() &&
+    !process.env.FRONTEND_URL?.trim()
+  ) {
+    throw new Error(
+      "CLIENT_URL or FRONTEND_URL is required in production"
     );
   }
 }
@@ -61,6 +71,7 @@ const normalizeOrigin = (origin) =>
   origin?.trim().replace(/\/$/, "");
 
 const FRONTEND_URL =
+  normalizeOrigin(process.env.CLIENT_URL) ||
   normalizeOrigin(process.env.FRONTEND_URL) ||
   "https://event-registration1342.vercel.app";
 
@@ -74,7 +85,10 @@ const allowedOrigins = new Set(
     .filter(Boolean)
 );
 
-allowedOrigins.add("https://event-registration1342.vercel.app");
+[
+  "https://event-registration1342.vercel.app",
+  "http://localhost:5173",
+].forEach((origin) => allowedOrigins.add(origin));
 
 if (!isProduction) {
   [
@@ -165,7 +179,12 @@ app.use(
       process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    name: "eventhub.sid",
+    proxy: true,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 24 * 60 * 60,
+      autoRemove: "native",
+    }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
       httpOnly: true,
