@@ -97,7 +97,7 @@ export default function Events() {
           <div>
             <p className="eyebrow">Live event dispatch</p>
             <h1 id="events-title" className="display-title">
-              Attend Atmos 2026: technical fest of BITS Hyderabad <span className="title-stamp">26 27 28 October.</span>
+              Atmos 2026 <span className="title-stamp">26 27 28 October.</span>
             </h1>
             <p className="body-copy">
               Workshops, hackathons, seminars, and competitions are listed like
