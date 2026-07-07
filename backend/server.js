@@ -6,9 +6,14 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const session = require("express-session");
-const MongoStore = require("connect-mongo");
+const connectMongo = require("connect-mongo");
 const passport = require("passport");
 const dns = require("dns");
+
+const MongoStore =
+  connectMongo.MongoStore ||
+  connectMongo.default ||
+  connectMongo;
 
 const NODE_ENV = process.env.NODE_ENV || "development";
 const isProduction = NODE_ENV === "production";
