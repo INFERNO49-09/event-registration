@@ -1,4 +1,4 @@
-# EventHub
+#  EventHub
 
 A full-stack event registration platform built with React, Node.js, Express, MongoDB, Google OAuth, Razorpay, and Tailwind CSS.
 
