@@ -69,9 +69,9 @@ export default function Events() {
       <div className="page-wrap">
         <nav className="dispatch-nav" aria-label="Primary navigation">
           <div className="brand-lockup">
-            <div className="brand-mark">EH</div>
+            <div className="brand-mark">BPHC</div>
             <div>
-              <p className="brand-title">EventHub</p>
+              <p className="brand-title">Atmos 2026</p>
               <p className="brand-subtitle">Welcome, {user?.name}</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function Events() {
           <div>
             <p className="eyebrow">Live event dispatch</p>
             <h1 id="events-title" className="display-title">
-              Pick the room before the room picks <span className="title-stamp">full.</span>
+              Attend Atmos 2026: technical fest of BITS Hyderabad <span className="title-stamp">26 27 28 October.</span>
             </h1>
             <p className="body-copy">
               Workshops, hackathons, seminars, and competitions are listed like
@@ -128,10 +128,10 @@ export default function Events() {
         <section aria-labelledby="browse-title">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Browse the board</p>
-              <h2 id="browse-title" className="section-title">Open seats</h2>
+              <p className="eyebrow">Browse the Events</p>
+              <h2 id="browse-title" className="section-title">Events</h2>
             </div>
-            <p className="muted">The coral rail marks claimed capacity.</p>
+            <p className="muted">Fest is boring without us.</p>
           </div>
 
           {events.length === 0 ? (
