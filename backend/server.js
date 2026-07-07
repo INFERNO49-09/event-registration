@@ -59,7 +59,7 @@ const paymentRoutes = require("./routes/payments");
 const app = express();
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
-  "http://localhost:5173";
+  "https://event-registration1342.vercel.app";
 
 const configuredOrigins =
   process.env.CORS_ORIGINS || FRONTEND_URL;
@@ -256,4 +256,3 @@ startServer().catch((err) => {
   );
   process.exit(1);
 });
-
