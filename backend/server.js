@@ -57,8 +57,11 @@ const adminRoutes = require("./routes/admin");
 const paymentRoutes = require("./routes/payments");
 
 const app = express();
+const normalizeOrigin = (origin) =>
+  origin?.trim().replace(/\/$/, "");
+
 const FRONTEND_URL =
-  process.env.FRONTEND_URL ||
+  normalizeOrigin(process.env.FRONTEND_URL) ||
   "https://event-registration1342.vercel.app";
 
 const configuredOrigins =
@@ -67,9 +70,11 @@ const configuredOrigins =
 const allowedOrigins = new Set(
   configuredOrigins
     .split(",")
-    .map((origin) => origin.trim())
+    .map((origin) => normalizeOrigin(origin))
     .filter(Boolean)
 );
+
+allowedOrigins.add("https://event-registration1342.vercel.app");
 
 if (!isProduction) {
   [
@@ -91,7 +96,9 @@ Middleware
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+
+      if (!normalizedOrigin || allowedOrigins.has(normalizedOrigin)) {
         callback(null, true);
         return;
       }
